@@ -21,7 +21,7 @@ $app->add(MethodOverrideMiddleware::class);
 $app->addErrorMiddleware(true, true, true);
 
 $app->get('/', function ($request, $response) {
-    return $response->write('Welcome!');
+    return $response->write('Hello, Любимочка! I love you!!!');
 });
 
 $app->run();
