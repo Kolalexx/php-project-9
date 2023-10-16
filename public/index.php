@@ -21,7 +21,7 @@ $app->add(MethodOverrideMiddleware::class);
 $app->addErrorMiddleware(true, true, true);
 
 $app->get('/', function ($request, $response) {
-    return $response->write('Hello, Любимочка! I love you!!!');
-});
+    return $this->get('renderer')->render($response, "index.phtml");
+})->setName('main');
 
 $app->run();
