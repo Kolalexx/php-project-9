@@ -13,7 +13,9 @@
         "php-di/php-di": "^7.0",
         "twbs/bootstrap": "5.3.2",
         "nesbot/carbon": "^2.71",
-        "vlucas/phpdotenv": "^5.5"
+        "vlucas/phpdotenv": "^5.5",
+        "vlucas/valitron": "^1.4",
+        "slim/flash": "^0.4.0"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "*"
