@@ -26,22 +26,8 @@ $container->set('pdo', function () {
     if (!$databaseUrl) {
         throw new \Exception("Error reading database configuration file");
     }
-    $dbHost = $databaseUrl['host'];
-    $dbPort = $databaseUrl['port'];
-    $dbName = ltrim($databaseUrl['path'], '/');
-    $dbUser = $databaseUrl['user'];
-    $dbPassword = $databaseUrl['pass'];
 
-    $conStr = sprintf(
-        "pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
-        $dbHost,
-        $dbPort,
-        $dbName,
-        $dbUser,
-        $dbPassword
-    );
-
-    $pdo = new \PDO($conStr);
+    $pdo = new \PDO($databaseUrl);
     $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
 
