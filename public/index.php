@@ -7,8 +7,7 @@ use Slim\Factory\AppFactory;
 use Slim\Middleware\MethodOverrideMiddleware;
 use Carbon\Carbon;
 use Valitron\Validator;
-
-use PostgreSQLTutorial\Connection;
+use Dotenv\Dotenv;
 
 $container = new Container();
 $container->set('renderer', function () {
@@ -16,6 +15,37 @@ $container->set('renderer', function () {
 });
 $container->set('flash', function () {
     return new \Slim\Flash\Messages();
+});
+$container->set('pdo', function () {
+    $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+    $dotenv->safeLoad();
+
+    var_dump($_ENV['DATABASE_URL']);
+
+    $databaseUrl = parse_url($_ENV['DATABASE_URL']);
+    if (!$databaseUrl) {
+        throw new \Exception("Error reading database configuration file");
+    }
+    $dbHost = $databaseUrl['host'];
+    $dbPort = $databaseUrl['port'];
+    $dbName = ltrim($databaseUrl['path'], '/');
+    $dbUser = $databaseUrl['user'];
+    $dbPassword = $databaseUrl['pass'];
+
+    $conStr = sprintf(
+        "pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
+        $dbHost,
+        $dbPort,
+        $dbName,
+        $dbUser,
+        $dbPassword
+    );
+
+    $pdo = new \PDO($conStr);
+    $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
+
+    return $pdo;
 });
 
 AppFactory::setContainer($container);
@@ -67,16 +97,16 @@ $app->post('/urls', function ($request, $response) use ($router) {
         $parseUrl = parse_url($url);
         $urlName = "{$parseUrl['scheme']}://{$parseUrl['host']}";
         try {
-            $pdo = Connection::get()->connect();
-            echo 'A connection to the PostgreSQL database sever has been established successfully.';
-        } catch (\PDOException $e) {
+            $pdo = $this->get('pdo');
+            $sql = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$urlName, $createdAt]);
+            $lastInsertId = (string) $pdo->lastInsertId();
+            $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
+            return $response->withRedirect($router->urlFor('url', ['id' => $lastInsertId]));
+        } catch (\Throwable | \PDOException $e) {
             echo $e->getMessage();
         }
-        $sql = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$urlName, $createdAt]);
-        $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
-        return $response->withRedirect($router->urlFor('main'));
     }
 
     $errors = $validator->errors();
