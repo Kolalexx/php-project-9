@@ -27,7 +27,22 @@ $container->set('pdo', function () {
         throw new \Exception("Error reading database configuration file");
     }
 
-    $pdo = new \PDO($databaseUrl);
+    $dbHost = $databaseUrl['host'];
+    $dbPort = $databaseUrl['port'];
+    $dbName = ltrim($databaseUrl['path'], '/');
+    $dbUser = $databaseUrl['user'];
+    $dbPassword = $databaseUrl['pass'];
+
+    $conStr = sprintf(
+        "pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
+        $dbHost,
+        $dbPort,
+        $dbName,
+        $dbUser,
+        $dbPassword
+    );
+
+    $pdo = new \PDO($conStr);
     $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
 
@@ -84,6 +99,22 @@ $app->post('/urls', function ($request, $response) use ($router) {
         $urlName = "{$parseUrl['scheme']}://{$parseUrl['host']}";
         try {
             $pdo = $this->get('pdo');
+
+            $queryUrl = 'SELECT name FROM urls WHERE name = ?';
+            $stmt = $pdo->prepare($queryUrl);
+            $stmt->execute([$urlName]);
+            $selectedUrl = $stmt->fetchAll();
+
+            if (count($selectedUrl) > 0) {
+                $queryId = 'SELECT id FROM urls WHERE name = ?';
+                $stmt = $pdo->prepare($queryId);
+                $stmt->execute([$urlName]);
+                $selectId = (string) $stmt->fetchColumn();
+
+                $this->get('flash')->addMessage('success', 'Страница уже существует');
+                return $response->withRedirect($router->urlFor('url', ['id' => $selectId]));
+            }
+
             $sql = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$urlName, $createdAt]);
