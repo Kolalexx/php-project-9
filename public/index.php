@@ -68,21 +68,27 @@ $app->get('/urls', function ($request, $response) {
     return $this->get('renderer')->render($response, "urls.phtml", $params);
 })->setName('urls');
 
-$app->get('/users/{id}', function ($request, $response, array $args) {
+$app->get('/urls/{id}', function ($request, $response, array $args) {
     $messages = $this->get('flash')->getMessages();
-    $params = ['flash' => $messages];
+
     $id = $args['id'];
-   // $users = readUsersList();
-  //  $user = findUser($users, $id);
-  //  $params = [
-    //    'user' => $user
-  //  ];
-    if (!$user) {
-        return $response->write('Page not found')
+
+    $pdo = $this->get('pdo');
+    $query = 'SELECT * FROM urls WHERE id = ?';
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$id]);
+    $urlSelect = $stmt->fetch();
+
+    if (count($urlSelect) === 0) {
+        return $response->write('Страница не найдена!')
             ->withStatus(404);
     }
+    $params = [
+        'flash' => $messages,
+        'data' => $urlSelect
+    ];
     return $this->get('renderer')->render($response, 'show.phtml', $params);
-})->setName('user');
+})->setName('url');
 
 $app->post('/urls', function ($request, $response) use ($router) {
     $urlData = $request->getParsedBodyParam('url');
