@@ -62,9 +62,13 @@ $app->get('/', function ($request, $response) {
 })->setName('main');
 
 $app->get('/urls', function ($request, $response) {
-    $messages = $this->get('flash')->getMessages();
-   // $users = readUsersList();
-    $params = ['flash' => $messages];
+    $pdo = $this->get('pdo');
+    $queryUrls = 'SELECT id, name FROM urls ORDER BY created_at DESC';
+    $stmt = $pdo->prepare($queryUrls);
+    $stmt->execute();
+    $selectedUrls = $stmt->fetchAll(\PDO::FETCH_UNIQUE);
+
+    $params = ['data' => $selectedUrls];
     return $this->get('renderer')->render($response, "urls.phtml", $params);
 })->setName('urls');
 
