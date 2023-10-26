@@ -20,7 +20,7 @@ $container->set('flash', function () {
 });
 $container->set('pdo', function () {
     $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-    $dotenv->Load();
+    $dotenv->safeLoad();
 
     $databaseUrl = parse_url($_ENV['DATABASE_URL']);
     if (!$databaseUrl) {
