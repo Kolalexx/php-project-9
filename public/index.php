@@ -9,6 +9,8 @@ use Carbon\Carbon;
 use Valitron\Validator;
 use Dotenv\Dotenv;
 
+session_start();
+
 $container = new Container();
 $container->set('renderer', function () {
     return new \Slim\Views\PhpRenderer(__DIR__ . '/../templates');
@@ -143,6 +145,25 @@ $app->post('/urls', function ($request, $response) use ($router) {
     ];
     $response = $response->withStatus(422);
     return $this->get('renderer')->render($response, 'index.phtml', $params);
+});
+
+$app->post('/urls/{url_id}/checks', function ($request, $response, array $args) use ($router) {
+    $id = $args['url_id'];
+    
+    try {
+        $pdo = $this->get('pdo');
+
+        $createdAt = Carbon::now();
+
+        $sql = "INSERT INTO url_checks (url_id, created_at) VALUES (?, ?)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id, $createdAt]);
+        $this->get('flash')->addMessage('success', 'Страница успешно проверена');
+    } catch (\PDOException $e) {
+        echo $e->getMessage();
+    }
+
+    return $response->withRedirect($router->urlFor('url', ['id' => $id]));
 });
 
 $app->run();
