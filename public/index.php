@@ -20,9 +20,7 @@ $container->set('flash', function () {
 });
 $container->set('pdo', function () {
     $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-    $dotenv->safeLoad();
-
-    var_dump($_ENV['DATABASE_URL']);
+    $dotenv->Load();
 
     $databaseUrl = parse_url($_ENV['DATABASE_URL']);
     if (!$databaseUrl) {
@@ -89,9 +87,14 @@ $app->get('/urls/{id}', function ($request, $response, array $args) {
         return $response->write('Страница не найдена!')
             ->withStatus(404);
     }
+    $queryCheck = 'SELECT * FROM url_checks WHERE url_id = ? ORDER BY created_at DESC';
+    $stmt = $pdo->prepare($queryCheck);
+    $stmt->execute([$id]);
+    $selectedCheck = $stmt->fetchAll();
     $params = [
         'flash' => $messages,
-        'data' => $urlSelect
+        'data' => $urlSelect,
+        'checkData' => $selectedCheck
     ];
     return $this->get('renderer')->render($response, 'show.phtml', $params);
 })->setName('url');
@@ -149,7 +152,7 @@ $app->post('/urls', function ($request, $response) use ($router) {
 
 $app->post('/urls/{url_id}/checks', function ($request, $response, array $args) use ($router) {
     $id = $args['url_id'];
-    
+
     try {
         $pdo = $this->get('pdo');
 
