@@ -63,7 +63,10 @@ $app->get('/', function ($request, $response) {
 
 $app->get('/urls', function ($request, $response) {
     $pdo = $this->get('pdo');
-    $queryUrls = 'SELECT id, name FROM urls ORDER BY created_at DESC';
+    $queryUrls = 'SELECT urls.id AS id, urls.name AS name, MAX(url_checks.created_at) AS created_at
+        FROM urls LEFT JOIN url_checks ON urls.id = url_checks.url_id
+        GROUP BY urls.id
+        ORDER BY created_at DESC';
     $stmt = $pdo->prepare($queryUrls);
     $stmt->execute();
     $selectedUrls = $stmt->fetchAll(\PDO::FETCH_UNIQUE);
