@@ -11,6 +11,7 @@ use Dotenv\Dotenv;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ConnectException;
+use DiDom\Document;
 
 session_start();
 
@@ -193,9 +194,21 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, array $args) 
 
         $statusCode = !is_null($res) ? $res->getStatusCode() : null;
 
-        $sql = "INSERT INTO url_checks (url_id, created_at, status_code) VALUES (?, ?, ?)";
+        $document = new Document($selectUrl, true);
+        $h1 = optional($document->first('h1'))->text();
+        $title = optional($document->first('title'))->text();
+        $description = optional($document->first('meta[name="description"]'))->getAttribute('content');
+
+        $sql = "INSERT INTO url_checks (
+            url_id,
+            created_at,
+            status_code,
+            h1, 
+            title, 
+            description)
+            VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$id, $createdAt, $statusCode]);
+        $stmt->execute([$id, $createdAt, $statusCode, $h1, $title, $description]);
     } catch (\PDOException $e) {
         echo $e->getMessage();
     }
