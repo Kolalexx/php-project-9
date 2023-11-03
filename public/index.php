@@ -172,7 +172,8 @@ $app->post('/urls', function ($request, $response) use ($router) {
     $errors = $validator->errors();
     $params = [
         'url' => $urlData['name'],
-        'errors' => $errors
+        'errors' => $errors,
+        'invalidForm' => 'is-invalid'
     ];
     $response = $response->withStatus(422);
     return $this->get('renderer')->render($response, 'index.phtml', $params);
