@@ -89,6 +89,19 @@ $app->get('/urls', function ($request, $response) {
 $app->get('/urls/{id}', function ($request, $response, array $args) {
     $messages = $this->get('flash')->getMessages();
 
+    $alert = '';
+    switch (key($messages)) {
+        case 'success':
+            $alert = 'success';
+            break;
+        case 'error':
+            $alert = 'warning';
+            break;
+        case 'danger':
+            $alert = 'danger';
+            break;
+    }
+
     $id = $args['id'];
 
     $pdo = $this->get('pdo');
@@ -108,7 +121,8 @@ $app->get('/urls/{id}', function ($request, $response, array $args) {
     $params = [
         'flash' => $messages,
         'data' => $urlSelect,
-        'checkData' => $selectedCheck
+        'checkData' => $selectedCheck,
+        'alert' => $alert
     ];
     return $this->get('renderer')->render($response, 'show.phtml', $params);
 })->setName('url');
