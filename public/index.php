@@ -204,8 +204,8 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, array $args) 
         }
 
         $statusCode = !is_null($res) ? $res->getStatusCode() : null;
-
-        $document = new Document($selectUrl, true);
+        $bodyHtml = $res->getBody();
+        $document = new Document($bodyHtml, true);
         $h1 = optional($document->first('h1'))->text();
         $title = optional($document->first('title'))->text();
         $description = optional($document->first('meta[name="description"]'))->getAttribute('content');
