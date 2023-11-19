@@ -156,7 +156,7 @@ $app->post('/urls', function ($request, $response) use ($router) {
     $stmt->execute([$urlName]);
     $selectedUrl = $stmt->fetchAll();
 
-    if (count($selectedUrl) > 0) {
+    if ($selectedUrl) {
         $queryId = 'SELECT id FROM urls WHERE name = ?';
         $stmt = $pdo->prepare($queryId);
         $stmt->execute([$urlName]);
@@ -204,7 +204,7 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, array $args) 
         }
 
         $statusCode = !is_null($res) ? $res->getStatusCode() : null;
-        
+
         $document = new Document($selectUrl, true);
         $h1 = optional($document->first('h1'))->text();
         $title = optional($document->first('title'))->text();
