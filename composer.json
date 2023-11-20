@@ -3,9 +3,9 @@
     "description": "Page Analyzer",
     "type": "project",
     "autoload": {
-        "files": [
-            "src/database.php"
-        ]
+        "psr-4": {
+            "Hexlet\\Code\\": "app/"
+        }
     },
     "authors": [
         {
