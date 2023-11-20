@@ -44,10 +44,10 @@
                             <th>Код ответа</th>
                         </tr>
 
-                        <?php foreach ($data as $id => $url) : ?>
+                        <?php foreach ($data as $key => $url) : ?>
                             <tr>
-                                <td><?= $id ?></td>
-                                <td><a href="/urls/<?= $id ?>"><?= $url['name'] ?></a></td>
+                                <td><?= $url['id'] ?></td>
+                                <td><a href="/urls/<?= $url['id'] ?>"><?= $url['name'] ?></a></td>
                                 <td><?= $url['created_at'] ?? '' ?></td>
                                 <td><?= $url['status_code'] ?? '' ?></td>
                             </tr>

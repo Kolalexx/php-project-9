@@ -3,10 +3,16 @@
     "description": "Page Analyzer",
     "type": "project",
     "autoload": {
-        "psr-4": {
-            "Hexlet\\Code\\": "app/"
-        }
+        "files": [
+            "src/database.php"
+        ]
     },
+    "authors": [
+        {
+            "name": "Kolesnikov Aleksey",
+            "email": "kolalexx@yandex.ru"
+        }
+    ],
     "require": {
         "slim/slim": "^4.12",
         "slim/psr7": "^1.6",
@@ -20,7 +26,8 @@
         "slim/flash": "^0.4.0",
         "guzzlehttp/guzzle": "^7.8",
         "imangazaliev/didom": "^2.0",
-        "laravel/installer": "^5.1"
+        "laravel/installer": "^5.1",
+        "tightenco/collect": "^9.52"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "*"
