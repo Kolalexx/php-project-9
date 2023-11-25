@@ -30,7 +30,7 @@ $container->set('pdo', function () {
 
     $databaseUrl = parse_url($_ENV['DATABASE_URL']);
     if (!$databaseUrl) {
-        throw new \Exception("Error reading database configuration file");
+        throw new \Exception("Ошибка при чтении файла конфигурации базы данных");
     }
 
     $dbHost = $databaseUrl['host'];
@@ -190,51 +190,47 @@ $app->post('/urls', function ($request, $response) use ($router) {
 $app->post('/urls/{url_id}/checks', function ($request, $response, array $args) use ($router) {
     $id = $args['url_id'];
 
+    $pdo = $this->get('pdo');
+
+    $queryUrl = 'SELECT name FROM urls WHERE id = ?';
+    $stmt = $pdo->prepare($queryUrl);
+    $stmt->execute([$id]);
+    $selectUrl = $stmt->fetch(\PDO::FETCH_COLUMN);
+
+    $createdAt = Carbon::now();
+
+    $client = $this->get('client');
     try {
-        $pdo = $this->get('pdo');
-
-        $queryUrl = 'SELECT name FROM urls WHERE id = ?';
-        $stmt = $pdo->prepare($queryUrl);
-        $stmt->execute([$id]);
-        $selectUrl = $stmt->fetch(\PDO::FETCH_COLUMN);
-
-        $createdAt = Carbon::now();
-
-        $client = $this->get('client');
-        try {
-            $res = $client->get($selectUrl);
-            $this->get('flash')->addMessage('success', 'Страница успешно проверена');
-        } catch (RequestException $e) {
-            $res = $e->getResponse();
-            $this->get('flash')->clearMessages();
-            $errorMessage = 'Проверка была выполнена успешно, но сервер ответил c ошибкой';
-            $this->get('flash')->addMessage('error', $errorMessage);
-        } catch (ConnectException $e) {
-            $errorMessage = 'Произошла ошибка при проверке, не удалось подключиться';
-            $this->get('flash')->addMessage('danger', $errorMessage);
-            return $response->withRedirect($router->urlFor('url', ['id' => $id]));
-        }
-
-        $statusCode = !is_null($res) ? $res->getStatusCode() : null;
-        $bodyHtml = $res->getBody();
-        $document = new Document((string) $bodyHtml);
-        $h1 = optional($document->first('h1'))->text();
-        $title = optional($document->first('title'))->text();
-        $description = optional($document->first('meta[name="description"]'))->getAttribute('content');
-
-        $sql = "INSERT INTO url_checks (
-            url_id,
-            created_at,
-            status_code,
-            h1, 
-            title, 
-            description)
-            VALUES (?, ?, ?, ?, ?, ?)";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$id, $createdAt, $statusCode, $h1, $title, $description]);
-    } catch (\PDOException $e) {
-        echo $e->getMessage();
+        $res = $client->get($selectUrl);
+        $this->get('flash')->addMessage('success', 'Страница успешно проверена');
+    } catch (RequestException $e) {
+        $res = $e->getResponse();
+        $this->get('flash')->clearMessages();
+        $errorMessage = 'Проверка была выполнена успешно, но сервер ответил c ошибкой';
+        $this->get('flash')->addMessage('error', $errorMessage);
+    } catch (ConnectException $e) {
+        $errorMessage = 'Произошла ошибка при проверке, не удалось подключиться';
+        $this->get('flash')->addMessage('danger', $errorMessage);
+        return $response->withRedirect($router->urlFor('url', ['id' => $id]));
     }
+
+    $statusCode = !is_null($res) ? $res->getStatusCode() : null;
+    $bodyHtml = $res->getBody();
+    $document = new Document((string) $bodyHtml);
+    $h1 = optional($document->first('h1'))->text();
+    $title = optional($document->first('title'))->text();
+    $description = optional($document->first('meta[name="description"]'))->getAttribute('content');
+
+    $sql = "INSERT INTO url_checks (
+        url_id,
+        created_at,
+        status_code,
+        h1, 
+        title, 
+        description)
+        VALUES (?, ?, ?, ?, ?, ?)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$id, $createdAt, $statusCode, $h1, $title, $description]);
 
     return $response->withRedirect($router->urlFor('url', ['id' => $id]));
 });
