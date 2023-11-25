@@ -17,7 +17,9 @@ session_start();
 
 $container = new Container();
 $container->set('renderer', function () {
-    return new \Slim\Views\PhpRenderer(__DIR__ . '/../templates');
+    $phpView = new \Slim\Views\PhpRenderer(__DIR__ . '/../templates');
+    $phpView->setLayout('layout.phtml');
+    return $phpView;
 });
 $container->set('flash', function () {
     return new \Slim\Flash\Messages();
